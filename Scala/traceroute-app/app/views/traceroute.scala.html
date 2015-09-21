@@ -1,0 +1,170 @@
+@import play.api.Play.current
+@import play.api.i18n.Messages.Implicits._
+
+@main("traceroute") {
+<div class="row" style="margin-top: 30px;margin-bottom: 30px;">
+    <div class="col-md-offset-2 col-md-8"><div id="map" style="height: 300px"></div></div>
+    <div class="col-md-2">サンプル
+        <ul>
+            <li fqdn="www.helsinki.fi">ヘルシンキ大学(フィンランド)</li>
+            <li fqdn="www.snu.ac.kr">ソウル大学(韓国)</li>
+            <li fqdn="www5.usp.br">サンパウロ大学(ブラジル)</li>
+            <li fqdn="www.ub.edu">バルセロナ大学(スペイン)</li>
+            <li fqdn="www.univ-dschang.org">ジャング大学(カメルーン)</li>
+            <li fqdn="sydney.edu.au">シドニー大学(オーストラリア)</li>
+            <li fqdn="www.pku.edu.cn">北京大学(中国)</li>
+        </ul>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-offset-3 col-md-6">
+        <div class="input-group">
+            <input id="fqdn" type="text" class="form-control input-lg" placeholder="FQDN or IPアドレス">
+            <span class="input-group-btn"><button id="trace-btn" class="btn btn-primary btn-lg" type="button">traceroute</button></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12"><div id="msg" class="text-center" style="margin-top:10px;margin-bottom:10px;">&nbsp;</div></div>
+</div>
+<div class="row">
+    <div class="col-md-offset-2 col-md-8">
+        <table class="table table-hover table-condensed">
+            <tr><th>No.</th><th>IPアドレス</th><th>国</th><th>緯度</th><th>経度</th><th>移動</th></tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //<![CDATA[
+
+    $(document).ready(function(){
+        $('li').on('click', function() {
+            $('#fqdn').val($(this).attr('fqdn'));
+        });
+    });
+
+    var no = 0;
+
+
+    var lastip = "";
+    function addLog(no, ip, country, lat, lng) {
+      if (ip == lastip) {
+        return;
+      }
+      lastip = ip;
+      var link = '<a onclick="moveMap(' + lat + ',' + lng + ')"><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span></a>'
+      $('table').append('<tr><td>' + no + '</td><td>' + ip + '</td><td>' + country + '</td><td>' + lat + '</td><td>' + lng + '</td><td>' + link + '</td></tr>');
+    }
+
+    function moveMap(lat, lng) {
+      // move map
+      map.panTo(new google.maps.LatLng(lat, lng));
+    }
+
+    $('#trace-btn').on('click', function(){
+      $(this).attr('disabled','disabled');
+      $('#fqdn').attr('disabled','disabled');
+      init()
+      $('table tbody').find('tr:gt(0)').remove();
+      no = 0;
+      loadNext($('#fqdn').val(), 0);
+      updateMessage("tracing " + $('#fqdn').val(), true);
+    });
+
+    var interval = null;
+    function updateMessage(msg, isFade) {
+        if (isFade && interval == null) {
+            interval = setInterval(function() {
+                $('#msg').fadeOut(500, function() {$(this).fadeIn(500)});
+            }, 1000);
+        } else if (!isFade) {
+            clearInterval(interval);
+            interval = null;
+        }
+        $('#msg').text(msg);
+    }
+
+    function loadNext(fqdn, nextseq) {
+      $.ajax({
+        url: 'tracing',
+        type: 'GET',
+        dataType: 'json',
+        data: {
+          fqdn: fqdn,
+          seq: nextseq
+        },
+        cache: false
+      })
+      .done(function(data, textStatus, jqXHR) {
+        if (data.status == 200) {
+            no += 1;
+            // 地図に点を追加
+            addLatLng(data.geometry.latitude, data.geometry.longitude);
+            // テーブルのトレースログを追加
+            addLog(no, data.geometry.ip, data.geometry.country, data.geometry.latitude, data.geometry.longitude);
+        } else if ( data.status == -1) {
+            updateMessage(fqdn + ' is bad parameter.', false);
+            $('#trace-btn').removeAttr('disabled');
+            $('#fqdn').removeAttr('disabled');
+            return;
+        }
+        if (data.nextseq != -1) {
+          updateMessage('tracing ' + data.fqdn + ' via ' + data.ip + ' ...', true);
+          setTimeout(function(){
+            // シーケンス番号が-1になるまで処理を続ける
+            loadNext(data.fqdn, data.nextseq);
+          }, 1000);
+        } else {
+          $('#trace-btn').removeAttr('disabled');
+          $('#fqdn').removeAttr('disabled');
+          updateMessage("trace " + data.fqdn + ' (' + data.ip + ') ' + "completed.", false);
+        }
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+      })
+      .always(function(jqXHR, textStatus) {
+      });
+    }
+
+    var map;
+    var poly;
+
+    function addLatLng(lat, lng) {
+      // add polyline
+      var path = poly.getPath();
+      path.push(new google.maps.LatLng(lat, lng));
+      poly.setPath(path);
+
+      // add marker
+      var marker = new google.maps.Marker({
+        position: {lat: lat, lng: lng},
+        title: '#' + path.getLength(),
+        map: map
+       });
+
+      // move map
+      map.panTo(new google.maps.LatLng(lat, lng));
+    }
+
+    function init() {
+      // initialize map
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 5,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        center: {lat: 35.5206, lng: 139.717} //Tokyo
+      });
+
+      // initialize polyline
+      poly = new google.maps.Polyline({
+        strokeColor: '#000000',
+        strokeOpacity: 0.7,
+        strokeWeight: 3
+       });
+      poly.setMap(map);
+
+    }
+
+    //]]>
+    </script>
+}

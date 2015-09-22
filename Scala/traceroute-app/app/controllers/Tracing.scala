@@ -29,7 +29,7 @@ class Tracing extends Controller {
       req => {
         val resParams = if (req.seq == 0) {
           // tracerouteコマンドを発行
-          println("start traceroute [fqdn: " + req.fqdn + " seq:" + req.seq + "]")
+          logger.info("start traceroute [fqdn: " + req.fqdn + " seq:" + req.seq + "]")
           execTrace(req.fqdn)
         } else {
           // traceroute情報を取得
@@ -51,7 +51,7 @@ class Tracing extends Controller {
    */
    def execTrace(fqdn: String): ResponseParams = {
      val filePath = Play.current.configuration.getString("traceroute.dir.path").get + fqdn
-     Process("traceroute -w 1 -m 30 -q 1 " + fqdn) #> new java.io.File(filePath) run
+     Process("traceroute -n -w 1 -m 30 -q 1 " + fqdn) #> new java.io.File(filePath) run
 
      val ip = Utility.getIpAddressByFqdn(fqdn)
      var status = if (ip.length > 0) { 100 } else { -1 }

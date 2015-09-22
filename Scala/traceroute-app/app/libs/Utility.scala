@@ -16,13 +16,13 @@ object Utility {
   /**
    * 文字列からIPアドレスを抽出
    *
-   * <p>tracerouteコマンドの結果<code>(xxx.xxx.xxx.xxx)</code>が文字列の中に含まれている必要がある</p>
+   * <p>tracerouteコマンドの結果<code>xxx.xxx.xxx.xxx</code>が文字列の中に含まれている必要がある</p>
    *
    * @param str 文字列
    * @return 文字列に含まれるIPアドレス
    */
   def extractIpAddressByString(str: String): Option[String]  = {
-  val pattern = """^\s?\d+.*\((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\).*""".r
+  val pattern = """^\s?\d+\s\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*""".r
     str match {
       case pattern(ip) =>  Some(ip)
       case _ => None

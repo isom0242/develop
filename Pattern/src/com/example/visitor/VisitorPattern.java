@@ -16,39 +16,43 @@ public class VisitorPattern {
 		root.add(hoge);
 		var.add(foo);
 
-		root.print();
+		Visitor v = new ConcreteVisitor();
+		root.accept(v);
 	}
 }
 
-class Visitor {
-	public void visit(Entity entity) {
-		entity.visitor = this;
+interface Visitor {
+	public void visit(File f);
+	public void visit(Dir d);
+}
+class ConcreteVisitor implements Visitor {
+	private String path = "";
+
+	public void visit(File f) {
+		System.out.println(path + "/" + f.name);
 	}
-
-	public void accept(Entity entity) {
-
+	public void visit(Dir d) {
+		String savePath = path;
+		path += "/" + d.name;
+		System.out.println(path);
+		for (Entity entity : d.getEntities()) {
+			entity.accept(this);
+		}
+		path = savePath;
 	}
 }
 
 abstract class Entity {
-	Visitor visitor;
 	protected String name;
-
-	abstract void print(String name);
-
-	public void print() {
-		print("");
-	}
+	abstract void accept(Visitor v);
 }
 
 class File extends Entity {
-
 	public File(String name) {
 		super.name = name;
 	}
-
-	public void print(String path) {
-		System.out.println(path + "/" + name);
+	public void accept(Visitor v) {
+		v.visit(this);
 	}
 }
 
@@ -58,16 +62,14 @@ class Dir extends Entity {
 	public Dir(String name) {
 		super.name = name;
 	}
-
-	public void print(String path) {
-		System.out.println(path);
-		for (Entity entity : entities) {
-			entity.print(path + "/" + name);
-		}
+	public void accept(Visitor v) {
+		v.visit(this);
 	}
-
 	public Dir add(Entity entity) {
 		entities.add(entity);
 		return this;
+	}
+	public List<Entity> getEntities() {
+		return entities;
 	}
 }

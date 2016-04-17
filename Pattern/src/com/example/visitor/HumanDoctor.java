@@ -7,9 +7,8 @@ public class HumanDoctor {
 
 		Man man1 = new Man("john", 1.8f, 60);
 		Woman woman1 = new Woman("mary", 1.8f, 60);
-		v.visit(man1);
-		v.printBmi();
-		v.visit(woman1);
+
+		man1.accept(v);
 		v.printBmi();
 
 	}

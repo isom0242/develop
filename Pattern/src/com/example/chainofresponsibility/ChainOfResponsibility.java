@@ -7,7 +7,6 @@ public class ChainOfResponsibility {
 		
 		h1.setNext(h2);
 		h1.handle(103);
-//		System.out.println("ok");
 	}
 }
 
@@ -42,5 +41,4 @@ class ConcreteHandler2 extends Handler {
 		}
 		return false;
 	}
-	
 }

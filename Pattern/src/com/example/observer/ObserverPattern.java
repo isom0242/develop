@@ -1,4 +1,4 @@
-package com.example.ovserver;
+package com.example.observer;
 
 import java.util.ArrayList;
 import java.util.Random;

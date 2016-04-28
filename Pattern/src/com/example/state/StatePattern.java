@@ -8,7 +8,7 @@ public class StatePattern {
 
 		context.toDisease();
 		context.print();
-		
+
 		context.toRecover();
 		context.print();
 	}
@@ -25,7 +25,7 @@ class Context {
 	public void toRecover() {
 		state.recover(this);
 	}
-	
+
 }
 
 interface State {

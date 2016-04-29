@@ -1,10 +1,11 @@
 package com.example.iterator;
 
-interface Iterator {
-	public boolean hasNext();
-	public Object next();
+interface Iterator<E> {
+	boolean hasNext();
+	E next();
+	void remove();
 }
 
-interface AggregateIterator {
-	public Iterator iterator();
+interface Iterable<T> {
+	Iterator<T> iterator();
 }

@@ -13,12 +13,10 @@ public class MonsterBattle {
 		Monsters monsters = new Monsters();
 		monsters.add(m1).add(m2).add(m3).add(m4);
 
-		Iterator iterator = monsters.iterator();
+		Iterator<Monster> iterator = monsters.iterator();
 		while (iterator.hasNext()) {
-			Monster m = (Monster)(iterator.next());
-			System.out.println(m.getName());
+			System.out.println(iterator.next().getName());
 		}
-
 	}
 }
 
@@ -32,7 +30,7 @@ class Monster {
 	}
 }
 
-class Monsters implements AggregateIterator {
+class Monsters implements Iterable<Monster> {
 	private List<Monster> monsters = new ArrayList<Monster>();
 	public Monsters add(Monster monster) {
 		monsters.add(monster);
@@ -42,12 +40,12 @@ class Monsters implements AggregateIterator {
 		return this.monsters;
 	}
 	@Override
-	public Iterator iterator() {
+	public Iterator<Monster> iterator() {
 		return new MonstersIterator(this);
 	}
 }
 
-class MonstersIterator implements Iterator {
+class MonstersIterator implements Iterator<Monster> {
 	private int index;
 	private Monsters monsters;
 	public MonstersIterator(Monsters monsters) {
@@ -61,12 +59,15 @@ class MonstersIterator implements Iterator {
 		}
 		return false;
 	}
-
 	@Override
-	public Object next() {
-		Object obj = monsters.getMonsters().get(index);
+	public Monster next() {
+		Monster monster = monsters.getMonsters().get(index);
 		index++;
-		return obj;
+		return monster;
+	}
+	@Override
+	public void remove() {
+		monsters.getMonsters().remove(index);
 	}
 	
 }

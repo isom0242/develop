@@ -13,6 +13,10 @@ public class FactoryMethodPattern {
 		parser2.read("JSON");
 		parser2.parse();
 		parser2.print();
+		
+		// 新たにHTMLパーサが必要になった場合、HTMLParseManagerを作成し
+		// makeParser()をオーバーライドする
+		// またParserを実装したHTMLパーサを作成
 
 	}
 }
@@ -22,6 +26,11 @@ class XMLParser implements Parser {
 	public String parse(String s) {
 		return s +  " is xml parsed.";
 	}
+}
+
+
+interface Parser {
+	public String parse(String s);
 }
 
 class JSONParser implements Parser {
@@ -43,10 +52,6 @@ class JSONParseManager extends ParseManager {
 	protected Parser makeParser() {
 		return new JSONParser();
 	}
-}
-
-interface Parser {
-	public String parse(String s);
 }
 
 abstract class ParseManager {
